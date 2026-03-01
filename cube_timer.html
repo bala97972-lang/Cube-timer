@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speedcube Timer</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --accent-color: #00e676;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #scramble {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            letter-spacing: 2px;
+            color: #bbb;
+        }
+
+        #timer {
+            font-size: 8rem;
+            font-weight: bold;
+            font-variant-numeric: tabular-nums;
+            cursor: pointer;
+            transition: color 0.1s;
+        }
+
+        /* Visual feedback when holding the spacebar */
+        #timer.ready { color: #ff5252; }
+        #timer.set { color: var(--accent-color); }
+
+        #instructions {
+            margin-top: 2rem;
+            color: #666;
+        }
+
+        .stats {
+            margin-top: 20px;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="scramble">Generating scramble...</div>
+    
+    <div id="timer">0.00</div>
+
+    <div class="stats">
+        Last Time: <span id="lastTime">--</span>
+    </div>
+
+    <div id="instructions">Press and hold <strong>Space</strong> to ready, release to start. Press again to stop.</div>
+
+    <script>
+        let startTime;
+        let timerInterval;
+        let isRunning = false;
+        let isReady = false;
+        let timerElement = document.getElementById('timer');
+        let scrambleElement = document.getElementById('scramble');
+        let lastTimeElement = document.getElementById('lastTime');
+
+        // 1. Generate a random Scramble
+        function generateScramble() {
+            const moves = ["U", "D", "L", "R", "F", "B"];
+            const modifiers = ["", "'", "2"];
+            let scramble = [];
+            let lastMove = "";
+
+            for (let i = 0; i < 20; i++) {
+                let move = moves[Math.floor(Math.random() * moves.size ?? moves.length)];
+                while (move === lastMove) {
+                    move = moves[Math.floor(Math.random() * moves.length)];
+                }
+                scramble.push(move + modifiers[Math.floor(Math.random() * modifiers.length)]);
+                lastMove = move;
+            }
+            scrambleElement.innerText = scramble.join(" ");
+        }
+
+        // 2. Timer Logic
+        function startTimer() {
+            startTime = Date.now();
+            timerInterval = setInterval(updateDisplay, 10);
+            isRunning = true;
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            lastTimeElement.innerText = timerElement.innerText;
+            generateScramble();
+        }
+
+        function updateDisplay() {
+            let elapsed = Date.now() - startTime;
+            let seconds = (elapsed / 1000).toFixed(2);
+            timerElement.innerText = seconds;
+        }
+
+        // 3. Event Listeners (Keyboard)
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                if (isRunning) {
+                    stopTimer();
+                } else if (!isReady) {
+                    isReady = true;
+                    timerElement.classList.add('ready');
+                }
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space' && isReady && !isRunning) {
+                isReady = false;
+                timerElement.classList.remove('ready');
+                startTimer();
+            }
+        });
+
+        // Initialize
+        generateScramble();
+    </script>
+</body>
+</html>
